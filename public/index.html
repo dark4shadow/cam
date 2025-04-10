@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Camera Feed</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: var(--tg-theme-bg-color, #ffffff);
+      color: var(--tg-theme-text-color, #222222);
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+    .video-container {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+    .camera-feed {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: var(--tg-theme-button-color, #50a8eb);
+      color: var(--tg-theme-button-text-color, #ffffff);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="video-container">
+      <img id="cameraFeed" class="camera-feed" alt="Camera Feed">
+    </div>
+    <div class="controls">
+      <button id="captureBtn">Capture Frame</button>
+      <button id="downloadBtn" style="display:none">Download</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tg = window.Telegram.WebApp;
+      const cameraFeed = document.getElementById('cameraFeed');
+      const captureBtn = document.getElementById('captureBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      
+      let lastCapturedImage = null;
+      
+      tg.expand();
+      tg.ready();
+      
+      // Function to update the camera feed
+      function updateCameraFeed() {
+        cameraFeed.src = `/api/camera?t=${new Date().getTime()}`;
+      }
+      
+      // Load initial image
+      updateCameraFeed();
+      
+      // Refresh the image periodically (every 1 second)
+      setInterval(updateCameraFeed, 1000);
+      
+      // Handle image load errors
+      cameraFeed.onerror = function() {
+        this.onerror = null;
+        setTimeout(updateCameraFeed, 2000); // Try again after 2 seconds
+      };
+      
+      captureBtn.addEventListener('click', function() {
+        fetch(`/api/frame?t=${new Date().getTime()}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // Store the captured image data
+              lastCapturedImage = {
+                filename: data.filename,
+                data: data.imageData
+              };
+              
+              // Show download button
+              downloadBtn.style.display = 'inline-block';
+              
+              // Show success popup
+              tg.showPopup({
+                title: 'Success',
+                message: 'Frame captured successfully',
+                buttons: [{type: 'ok'}]
+              });
+            }
+          })
+          .catch(err => {
+            tg.showPopup({
+              title: 'Error',
+              message: 'Failed to capture frame',
+              buttons: [{type: 'ok'}]
+            });
+          });
+      });
+      
+      downloadBtn.addEventListener('click', function() {
+        if (lastCapturedImage) {
+          const link = document.createElement('a');
+          link.href = `data:image/jpeg;base64,${lastCapturedImage.data}`;
+          link.download = lastCapturedImage.filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
