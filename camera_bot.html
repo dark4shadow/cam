@@ -13,8 +13,22 @@
       height: 100vh;
     }
   </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tg = window.Telegram.WebApp;
+      tg.expand(); // Expand the web app to full height
+      tg.ready(); // Notify Telegram that the Web App is ready
+
+      document.getElementById('cameraFeed').onerror = function() {
+        this.onerror = null;
+        this.src = 'path/to/fallback-image.jpg';
+        alert('Camera feed unavailable');
+      };
+    });
+  </script>
 </head>
 <body>
-  <img style="display: block;-webkit-user-select: none;margin: auto;background-color: hsl(0, 0%, 25%);" src="http://24.134.3.9/axis-cgi/mjpg/video.cgi" width="1251" height="703">
+  <img id="cameraFeed" style="display: block; margin: auto; max-width: 100%; height: auto;" 
+       src="http://24.134.3.9/axis-cgi/mjpg/video.cgi">
 </body>
 </html>
