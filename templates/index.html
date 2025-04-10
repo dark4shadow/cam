@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Camera Feed</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: var(--tg-theme-bg-color, #ffffff);
+      color: var(--tg-theme-text-color, #222222);
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+    .video-container {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+    .video-feed {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: var(--tg-theme-button-color, #50a8eb);
+      color: var(--tg-theme-button-text-color, #ffffff);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="video-container">
+      <img src="/video_feed" class="video-feed" alt="Camera Feed">
+    </div>
+    <div class="controls">
+      <button id="captureBtn">Capture Frame</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tg = window.Telegram.WebApp;
+      tg.expand();
+      tg.ready();
+      
+      // Optional: Add capture functionality
+      document.getElementById('captureBtn').addEventListener('click', function() {
+        fetch('/capture')
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              tg.showPopup({
+                title: 'Success',
+                message: 'Frame captured successfully',
+                buttons: [{type: 'ok'}]
+              });
+            }
+          });
+      });
+    });
+  </script>
+</body>
+</html>
